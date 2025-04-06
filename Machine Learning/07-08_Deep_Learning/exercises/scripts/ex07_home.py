@@ -1,18 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import accuracy_score
 from scipy.special import softmax
-
-X, y = load_digits(return_X_y=True)
-# Convert a categorical vector y (shape [N]) into a one-hot encoded matrix (shape [N, K])
-Y = label_binarize(y, classes=np.unique(y)).astype(np.float64)
-np.random.seed(123)
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.25)
-N, K = Y.shape # N - num_samples, K - num_classes
-D = X.shape[1] # num_features
 
 class Affine:
     def forward(self, inputs: np.ndarray, weight: np.ndarray, bias: np.ndarray):
@@ -57,8 +49,6 @@ class Affine:
         assert np.all(d_bias.shape == bias.shape)
         return d_inputs, d_weight, d_bias
     
-affine = Affine()
-
 class ReLU:
     def forward(self, inputs: np.ndarray):
         """Forward pass of a ReLU layer.
@@ -90,7 +80,6 @@ class ReLU:
         #############################################################
         assert np.all(d_inputs.shape == inputs.shape)
         return d_inputs
-
 
 class CategoricalCrossEntropy:
     def forward(self, logits, labels):
@@ -135,7 +124,6 @@ class CategoricalCrossEntropy:
         d_labels = None
         assert np.all(d_logits.shape == probs.shape == labels.shape)
         return d_logits, d_labels
-
 
 class LogisticRegression:
     def __init__(self, num_features, num_classes, learning_rate=1e-2):
@@ -186,31 +174,7 @@ class LogisticRegression:
         for p in self.params:
             self.params[p] = self.params[p] - self.learning_rate * grads[p]
         return loss
-    
-# Specify optimization parameters
-learning_rate = 1e-2
-max_epochs = 501
-report_frequency = 50
-
-log_reg = LogisticRegression(num_features=D, num_classes=K)
-
-for epoch in range(max_epochs):
-    loss = log_reg.step(X_train, Y_train)
-    if epoch % report_frequency == 0:
-        print(f"Epoch {epoch:4d}, loss = {loss:.4f}")
-
-y_test_pred = log_reg.predict(X_test).argmax(1)
-y_test_true = Y_test.argmax(1)
-
-print(f"test set accuracy = {accuracy_score(y_test_true, y_test_pred):.3f}")
-
-def xavier_init(shape):
-    """Initialize a weight matrix according to Xavier initialization.
-    See pytorch.org/docs/stable/nn.init#torch.nn.init.xavier_uniform_ for details.
-    """
-    a = np.sqrt(6.0 / float(np.sum(shape)))
-    return np.random.uniform(low=-a, high=a, size=shape)
-
+   
 class FeedforwardNeuralNet:
     def __init__(self, input_size, hidden_size, output_size, learning_rate=1e-2):
         """A two-layer feedforward neural network with ReLU activations.
@@ -281,21 +245,53 @@ class FeedforwardNeuralNet:
         ############################################################
         return loss
 
-H = 32 # size of the hidden layer
-# Specify optimization parameters
-learning_rate = 1e-2
-max_epochs = 501
-report_frequency = 50
-model = FeedforwardNeuralNet(
-input_size=D, hidden_size=H, output_size=K, learning_rate=learning_rate
-)
+def xavier_init(shape):
+    """Initialize a weight matrix according to Xavier initialization.
+    See pytorch.org/docs/stable/nn.init#torch.nn.init.xavier_uniform_ for details.
+    """
+    a = np.sqrt(6.0 / float(np.sum(shape)))
+    return np.random.uniform(low=-a, high=a, size=shape)
 
-for epoch in range(max_epochs):
-    loss = model.step(X_train, Y_train)
-    if epoch % report_frequency == 0:
-        print(f"Epoch {epoch:4d}, loss = {loss:.4f}")
+def main():
+    X, y = load_digits(return_X_y=True)
+    # Convert a categorical vector y (shape [N]) into a one-hot encoded matrix (shape [N, K])
+    Y = label_binarize(y, classes=np.unique(y)).astype(np.float64)
+    np.random.seed(123)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.25)
+    N, K = Y.shape # N - num_samples, K - num_classes
+    D = X.shape[1] # num_features
 
-y_test_pred = model.predict(X_test).argmax(1)
-y_test_true = Y_test.argmax(1)
+    learning_rate = 1e-2
+    max_epochs = 501
+    report_frequency = 50
+    log_reg = LogisticRegression(num_features=D, num_classes=K)
 
-print(f"test set accuracy = {accuracy_score(y_test_true, y_test_pred):.3f}")
+    for epoch in range(max_epochs):
+        loss = log_reg.step(X_train, Y_train)
+        if epoch % report_frequency == 0:
+            print(f"Epoch {epoch:4d}, loss = {loss:.4f}")
+
+    y_test_pred = log_reg.predict(X_test).argmax(1)
+    y_test_true = Y_test.argmax(1)
+    print(f"test set accuracy = {accuracy_score(y_test_true, y_test_pred):.3f}")
+
+    H = 32
+    learning_rate = 1e-2
+    max_epochs = 501
+    report_frequency = 50
+    model = FeedforwardNeuralNet(
+    input_size=D, hidden_size=H, output_size=K, learning_rate=learning_rate
+    )
+
+    for epoch in range(max_epochs):
+        loss = model.step(X_train, Y_train)
+        if epoch % report_frequency == 0:
+            print(f"Epoch {epoch:4d}, loss = {loss:.4f}")
+
+    y_test_pred = model.predict(X_test).argmax(1)
+    y_test_true = Y_test.argmax(1)
+
+    print(f"test set accuracy = {accuracy_score(y_test_true, y_test_pred):.3f}")
+
+if __name__ == "__main__":
+    main()

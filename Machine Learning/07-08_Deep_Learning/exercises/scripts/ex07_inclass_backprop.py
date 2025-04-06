@@ -49,7 +49,7 @@ class DotProduct:
         d_x = d_out * y
         d_y = d_out * x
         return d_x, d_y
-
+# 
 class Affine:
     def forward(self, inputs, weight, bias):
         """Forward pass of an affine (fully connected) layer.
@@ -62,12 +62,12 @@ class Affine:
         Returns
             out: output matrix, shape (N, H)
         """
-        self.cache = (inputs, weight, bias)
+        self.cache = (inputs, weight, bias) # (N, D), (D, H), (H)
         out = inputs @ weight + bias # out = inputs.dot(weight) + bias
 
         assert out.shape[0] == inputs.shape[0]
         assert out.shape[1] == weight.shape[1] == bias.shape[0]
-        return out
+        return out # (N, H)
 
     def backward(self, d_out):
         """Backward pass of an affine (fully connected) layer.

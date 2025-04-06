@@ -42,16 +42,6 @@ class Dropout(nn.Module):
         else:
             return input
         
-# Test dropout
-test = torch.rand(10_000)
-dropout = Dropout(0.2)
-test_dropped = dropout(test)
-
-# These assertions can in principle fail due to bad luck, but
-# if implemented correctly they should almost always succeed.
-assert np.isclose(test_dropped.mean().item(), test.mean().item(), atol=1e-2)
-assert np.isclose((test_dropped > 0).float().mean().item(), 0.8, atol=1e-2)
-
 class BatchNorm(nn.Module):
     """
     Batch normalization, as discussed in the lecture and similar to
@@ -90,18 +80,6 @@ class BatchNorm(nn.Module):
         
         input_normalized = (input - mean) / (std + eps)
         return self.gamma[None, :, None] * input_normalized + self.beta[None, :, None]
-
-# Tests the batch normalization implementation
-torch.random.manual_seed(42)
-test = torch.randn(8, 2, 4)
-
-b1 = BatchNorm(2)
-test_b1 = b1(test)
-
-b2 = nn.BatchNorm1d(2, affine=False, track_running_stats=False)
-test_b2 = b2(test)
-
-assert torch.allclose(test_b1, test_b2, rtol=0.02)
 
 class Lambda(nn.Module):
     def __init__(self, func):
@@ -169,32 +147,7 @@ class ResidualStack(nn.Module):
         for block in self.blocks:
             x = block(x)
         return x
-
-n = 5
-num_classes = 10
-
-# TODO: Implement ResNet via nn.Sequential
-resnet = nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
-    nn.BatchNorm2d(16),
-    nn.ReLU(),
-    ResidualStack(16, 16, stride=1, num_blocks=n),
-    ResidualStack(16, 32, stride=2, num_blocks=n),
-    ResidualStack(32, 64, stride=2, num_blocks=n),
-    nn.AdaptiveAvgPool2d(1),
-    Lambda(lambda x: x.squeeze()),
-    nn.Linear(64, num_classes)
-)
-
-def initialize_weight(module):
-    if isinstance(module, (nn.Linear, nn.Conv2d)):
-        nn.init.kaiming_normal_(module.weight, nonlinearity='relu')
-    elif isinstance(module, nn.BatchNorm2d):
-        nn.init.constant_(module.weight, 1)
-        nn.init.constant_(module.bias, 0)
-        
-resnet.apply(initialize_weight);
-
+      
 class CIFAR10Subset(torchvision.datasets.CIFAR10):
     """
     Get a subset of the CIFAR10 dataset, according to the passed indices.
@@ -208,41 +161,6 @@ class CIFAR10Subset(torchvision.datasets.CIFAR10):
         self.data = self.data[idx]
         targets_np = np.array(self.targets)
         self.targets = targets_np[idx].tolist()
-
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-transform_train = transforms.Compose([
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomCrop(32, 4),
-    transforms.ToTensor(),
-    normalize,
-])
-transform_eval = transforms.Compose([
-    transforms.ToTensor(),
-    normalize
-])
-
-ntrain = 45_000
-train_set = CIFAR10Subset(root='./data', train=True, idx=range(ntrain),
-                          download=True, transform=transform_train)
-val_set = CIFAR10Subset(root='./data', train=True, idx=range(ntrain, 50_000),
-                        download=True, transform=transform_eval)
-test_set = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                        download=True, transform=transform_eval)
-
-dataloaders = {}
-dataloaders['train'] = torch.utils.data.DataLoader(train_set, batch_size=128,
-                                                   shuffle=True, num_workers=2,
-                                                   pin_memory=True)
-dataloaders['val'] = torch.utils.data.DataLoader(val_set, batch_size=128,
-                                                 shuffle=False, num_workers=2,
-                                                 pin_memory=True)
-dataloaders['test'] = torch.utils.data.DataLoader(test_set, batch_size=128,
-                                                  shuffle=False, num_workers=2,
-                                                  pin_memory=True)
-
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-resnet.to(device);
 
 def run_epoch(model, optimizer, dataloader, train):
     """
@@ -339,16 +257,89 @@ def fit(model, optimizer, lr_scheduler, dataloaders, max_epochs, patience):
     
     model.load_state_dict(best_model_weights)
 
-optimizer = torch.optim.SGD(resnet.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
-lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1)
-
-# Fit model
-fit(resnet, optimizer, lr_scheduler, dataloaders, max_epochs=200, patience=50)
-
-test_loss, test_acc = run_epoch(resnet, None, dataloaders['test'], train=False)
-print(f"Test loss: {test_loss:.1e}, accuracy: {test_acc * 100:.2f}%")
-
+def initialize_weight(module):
+    if isinstance(module, (nn.Linear, nn.Conv2d)):
+        nn.init.kaiming_normal_(module.weight, nonlinearity='relu')
+    elif isinstance(module, nn.BatchNorm2d):
+        nn.init.constant_(module.weight, 1)
+        nn.init.constant_(module.bias, 0)
+  
 def main():
+
+    # Tests the batch normalization implementation
+    torch.random.manual_seed(42)
+    test = torch.randn(8, 2, 4)
+
+    b1 = BatchNorm(2)
+    test_b1 = b1(test)
+
+    b2 = nn.BatchNorm1d(2, affine=False, track_running_stats=False)
+    test_b2 = b2(test)
+
+    assert torch.allclose(test_b1, test_b2, rtol=0.02)
+
+    n = 5
+    num_classes = 10
+
+    # TODO: Implement ResNet via nn.Sequential
+    resnet = nn.Sequential(
+        nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False),
+        nn.BatchNorm2d(16),
+        nn.ReLU(),
+        ResidualStack(16, 16, stride=1, num_blocks=n),
+        ResidualStack(16, 32, stride=2, num_blocks=n),
+        ResidualStack(32, 64, stride=2, num_blocks=n),
+        nn.AdaptiveAvgPool2d(1),
+        Lambda(lambda x: x.squeeze()),
+        nn.Linear(64, num_classes)
+    )
+
+    resnet.apply(initialize_weight);
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225])
+    transform_train = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, 4),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    transform_eval = transforms.Compose([
+        transforms.ToTensor(),
+        normalize
+    ])
+
+    ntrain = 45_000
+    train_set = CIFAR10Subset(root='./data', train=True, idx=range(ntrain),
+                            download=True, transform=transform_train)
+    val_set = CIFAR10Subset(root='./data', train=True, idx=range(ntrain, 50_000),
+                            download=True, transform=transform_eval)
+    test_set = torchvision.datasets.CIFAR10(root='./data', train=False,
+                                            download=True, transform=transform_eval)
+
+    dataloaders = {}
+    dataloaders['train'] = torch.utils.data.DataLoader(train_set, batch_size=128,
+                                                    shuffle=True, num_workers=2,
+                                                    pin_memory=True)
+    dataloaders['val'] = torch.utils.data.DataLoader(val_set, batch_size=128,
+                                                    shuffle=False, num_workers=2,
+                                                    pin_memory=True)
+    dataloaders['test'] = torch.utils.data.DataLoader(test_set, batch_size=128,
+                                                    shuffle=False, num_workers=2,
+                                                    pin_memory=True)
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    resnet.to(device);
+
+    optimizer = torch.optim.SGD(resnet.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1)
+
+    # Fit model
+    fit(resnet, optimizer, lr_scheduler, dataloaders, max_epochs=200, patience=50)
+
+    test_loss, test_acc = run_epoch(resnet, None, dataloaders['test'], train=False)
+    print(f"Test loss: {test_loss:.1e}, accuracy: {test_acc * 100:.2f}%")
+
     # Test dropout
     test = torch.rand(10_000)
     dropout = Dropout(0.2)

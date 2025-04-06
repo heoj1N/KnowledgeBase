@@ -6,10 +6,215 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision
+from torch import nn
+
+from torch.utils.data import TensorDataset
+import multiprocessing
+from torch.utils.data import DataLoader
 
 from typing import Any, Callable, Dict, Optional, Set, Tuple, Union
 import torch.nn.functional as F
 from typeguard import typechecked
+
+from torchviz import make_dot
+from IPython.display import Image
+
+@typechecked
+class LogisticRegression(nn.Module):
+    """Logistic regression model.
+
+    The model consists of a single linear layer that maps from the number of features to the number of classes.
+    """
+
+    def __init__(self, num_features: int, num_classes: int) -> None:
+        """Constructor method for LogisticRegression.
+
+        Args:
+            num_features: the number of features
+            num_classes: the number of classes
+        """
+        super().__init__()
+
+        # define the parameters
+        self.weight = nn.Parameter(torch.Tensor(num_features, num_classes))
+        self.bias = nn.Parameter(torch.Tensor(num_classes))
+
+        # initialize the parameters
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        """Initialize the parameters.
+
+        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
+        """
+        nn.init.xavier_uniform_(self.weight)
+        nn.init.zeros_(self.bias)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x: the input tensor
+
+        Returns:
+            the logits
+        """
+        return x @ self.weight + self.bias
+
+@typechecked
+class LogisticRegression(nn.Module):
+    """Logistic regression model.
+
+    The model consists of a single linear layer that maps from the number of features to the number of classes.
+    """
+
+    def __init__(self, num_features: int, num_classes: int) -> None:
+        """Constructor method for LogisticRegression.
+
+        Args:
+            num_features: the number of features
+            num_classes: the number of classes
+        """
+        super().__init__()
+        # define the linear layer
+        self.lin = nn.Linear(num_features, num_classes, bias=True)
+
+        # initialize the weights
+        self.init_weights()
+
+    def init_weights(self):
+        """Initialize the weights.
+
+        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
+        """
+        if isinstance(self.lin, (nn.Linear, nn.Conv2d)):
+            nn.init.xavier_uniform_(self.lin.weight)
+            if self.lin.bias is not None:
+                nn.init.zeros_(self.lin.bias)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x: the input tensor
+
+        Returns:
+            the logits
+        """
+        return self.lin(x)
+
+@typechecked
+class FlattenTransform:
+    """Data transform that flattens the input tensor"""
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Flatten the input tensor.
+
+        Args:
+            image: the input tensor
+
+        Returns:
+            the flattened input tensor
+        """
+        return tensor.view(-1)
+
+@typechecked
+class IntToTensorTransform:
+    """Data transform that converts the input integer to a tensor"""
+
+    def __call__(self, value: int) -> torch.Tensor:
+        """Convert the input integer to a tensor.
+
+        Args:
+            value: the input integer
+
+        Returns:
+            the converted tensor
+        """
+        return torch.tensor(value, dtype=torch.int64)
+
+
+@typechecked
+class CNN(nn.Module):
+    """Convolutional neural network model."""
+
+    def __init__(self, num_layers: int, num_channels: int, num_classes: int) -> None:
+        """Constructor method for CNN.
+
+        Args:
+            num_layers: the number of layers
+            num_channels: the number of channels
+            num_classes: the number of classes
+        """
+        super().__init__()
+        self.layers = nn.ModuleList()
+        for i in range(num_layers):
+            in_channels = 1 if i == 0 else num_channels
+            out_channels = num_channels if i < num_layers - 1 else num_classes
+            self.layers.append(
+                nn.Conv2d(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                )
+            )
+            self.layers.append(nn.ReLU())
+        self.layers.append(nn.AdaptiveAvgPool2d(1))
+
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        """Initialize the parameters.
+
+        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
+        """
+        for layer in self.layers:
+            if isinstance(layer, nn.Conv2d):
+                nn.init.xavier_normal_(layer.weight)
+                nn.init.zeros_(layer.bias)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x: the input tensor
+
+        Returns:
+            the logits
+        """
+        x = x.view(-1, 1, 28, 28)
+        for layer in self.layers:
+            x = layer(x)
+        x = x.view(x.size(0), -1)
+        return x
+
+
+@typechecked
+class Lambda(nn.Module):
+    """A module that applies a given function."""
+
+    def __init__(self, func: Callable[[torch.Tensor], Any]) -> None:
+        """Constructor method for Lambda.
+
+        Args:
+            func: the function to apply
+        """
+        super().__init__()
+        self.func = func
+
+    def forward(self, x: torch.Tensor) -> Any:
+        """Forward pass.
+
+        Args:
+            x: the input tensor
+
+        Returns:
+            the output of the function
+        """
+        return self.func(x)
+
 
 @typechecked
 def sum(x: int, y: int) -> int:
@@ -24,61 +229,6 @@ def sum(x: int, y: int) -> int:
     """
     return x + y
 
-a = sum(1, 2)
-print(a)
-
-try:
-    b = sum(1, 1.2)
-except TypeError as e:
-    print(f"TypeError: {e}")
-
-# download MNIST dataset
-mnist_dev = torchvision.datasets.MNIST("./data", train=True, download=True)
-mnist_test = torchvision.datasets.MNIST("./data", train=False, download=True)
-mnist_dev, mnist_test
-
-# check if the dataset is an instance of torch.utils.data.Dataset
-isinstance(mnist_dev, torch.utils.data.Dataset)
-
-x_dev, y_dev = mnist_dev.data, mnist_dev.targets
-
-print(x_dev.shape, x_dev.dtype, x_dev.min(), x_dev.max())
-print(y_dev.shape, y_dev.dtype, y_dev.min(), y_dev.max())
-
-# plot the first 10 images
-fig, ax = plt.subplots(2, 5, figsize=(10, 4))
-for i in range(10):
-    ax[i // 5, i % 5].imshow(x_dev[i], cmap="gray")
-    ax[i // 5, i % 5].set_title(f"Label: {y_dev[i]}")
-    ax[i // 5, i % 5].axis("off")
-plt.tight_layout()
-plt.show()
-
-x_dev = mnist_dev.data / 255.0
-
-# split the dataset into train and validation
-NUM_TRAIN = 50_000
-
-x_train, y_train = x_dev[:NUM_TRAIN].flatten(1), y_dev[:NUM_TRAIN]
-x_val, y_val = x_dev[NUM_TRAIN:].flatten(1), y_dev[NUM_TRAIN:]
-
-x_test = (mnist_test.data / 255.0).flatten(1)
-y_test = mnist_test.targets
-
-# check the shapes and data types
-print(
-    f"Training data: {x_train.shape}, {y_train.shape}, {x_train.dtype}, {y_train.dtype}"
-)
-print(f"Validation data: {x_val.shape}, {y_val.shape}, {x_val.dtype}, {y_val.dtype}")
-print(f"Test data: {x_test.shape}, {y_test.shape}, {x_test.dtype}, {y_test.dtype}")
-
-# define number of features and classes
-NUM_FEATURES = x_train.shape[1]
-NUM_CLASSES = len(torch.unique(y_train))
-
-print(f"Num. of features: {NUM_FEATURES}")
-print(f"Num. of classes: {NUM_CLASSES}")
-
 @typechecked
 def set_seed(seed: int) -> None:
     """Set the random seed for reproducibility.
@@ -89,36 +239,6 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-
-# Show how seed affects the random number generation
-print(f"Seed: 42")
-set_seed(42)
-print(np.random.randint(0, 100, 6))
-print(np.random.randint(0, 100, 6))
-set_seed(42)
-print(f"Seed: 42")
-print(np.random.randint(0, 100, 3))
-print(np.random.randint(0, 100, 3))
-print(np.random.randint(0, 100, 3))
-print(np.random.randint(0, 100, 3))
-
-SEED = 42
-set_seed(SEED)
-
-x = torch.tensor([1.0, 2.0, 3.0], requires_grad=False)
-y = torch.tensor([4.0, 5.0, 6.0], requires_grad=False)
-z = torch.tensor([7.0, 8.0, 9.0], requires_grad=True)
-
-a = x + y
-b = x + z
-
-print(f"a.requires_grad: {a.requires_grad}")
-print(f"b.requires_grad: {b.requires_grad}")
-
-weight = torch.empty(NUM_FEATURES, NUM_CLASSES, requires_grad=False)
-bias = torch.empty(NUM_CLASSES, requires_grad=False)
-
-weight, bias
 
 @typechecked
 def sample_from_uniform(
@@ -138,7 +258,6 @@ def sample_from_uniform(
     # multiply by (high - low) to get samples from uniform distribution [0, high-low)
     # shift the distribution by adding low to get samples from uniform distribution [low, high)
     return torch.rand(*size, dtype=torch.float32) * (high - low) + low
-
 
 @typechecked
 def xavier_uniform_init(
@@ -173,12 +292,6 @@ def zeros_init(weight: torch.Tensor, requires_grad: bool = True) -> torch.Tensor
         the weight tensor initialized using zeros
     """
     return torch.zeros_like(weight, requires_grad=requires_grad)
-
-# initialize weight using Glorot initialization and bias to zero
-weight = xavier_uniform_init(weight, requires_grad=True)
-bias = zeros_init(bias, requires_grad=True)
-
-weight, bias
 
 @typechecked
 def model(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
@@ -220,35 +333,6 @@ def nll_loss(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     """
     output = log_softmax(logits)
     return -output[range(target.shape[0]), target].mean()
-
-x, label = x_train[:64], y_train[:64]
-logits = model(x, weight, bias)
-print(logits.shape)
-loss = nll_loss(logits, label)
-
-
-from torchviz import make_dot
-from IPython.display import Image
-
-logits = model(x, weight, bias)
-loss = nll_loss(logits, label)
-params = {"weight": weight, "bias": bias}
-
-dot = make_dot(loss, params=params, show_attrs=True, show_saved=True)
-dot.render(
-    "computational_graph", directory="img", format="png"
-)  # Save the graph as a PNG file
-
-Image("img/computational_graph.png", width=600)
-
-# define loss function
-criterion = nll_loss
-
-# define hyperparameters
-LEARNING_RATE = 0.01
-NUM_EPOCHS = 5
-BATCH_SIZE = 64
-
 
 @typechecked
 def fit(
@@ -343,76 +427,6 @@ def fit(
     ax2.set_ylabel("Accuracy")
     fig.suptitle(f"Training")
     plt.show()
-
-fit(
-    model,
-    weight,
-    bias,
-    x_train,
-    y_train,
-    criterion,
-    LEARNING_RATE,
-    NUM_EPOCHS,
-    BATCH_SIZE,
-)
-
-criterion = nll_loss
-pred = model(x_train[:BATCH_SIZE], weight, bias)
-target = y_train[:BATCH_SIZE]
-print(criterion(pred, target))
-
-criterion = F.cross_entropy
-pred = model(x_train[:BATCH_SIZE], weight, bias)
-target = y_train[:BATCH_SIZE]
-print(criterion(pred, target))
-
-from torch import nn
-
-
-@typechecked
-class LogisticRegression(nn.Module):
-    """Logistic regression model.
-
-    The model consists of a single linear layer that maps from the number of features to the number of classes.
-    """
-
-    def __init__(self, num_features: int, num_classes: int) -> None:
-        """Constructor method for LogisticRegression.
-
-        Args:
-            num_features: the number of features
-            num_classes: the number of classes
-        """
-        super().__init__()
-
-        # define the parameters
-        self.weight = nn.Parameter(torch.Tensor(num_features, num_classes))
-        self.bias = nn.Parameter(torch.Tensor(num_classes))
-
-        # initialize the parameters
-        self.init_weights()
-
-    def init_weights(self) -> None:
-        """Initialize the parameters.
-
-        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
-        """
-        nn.init.xavier_uniform_(self.weight)
-        nn.init.zeros_(self.bias)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-
-        Args:
-            x: the input tensor
-
-        Returns:
-            the logits
-        """
-        return x @ self.weight + self.bias
-
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
 
 @typechecked
 def fit(
@@ -520,62 +534,6 @@ def plot_curves(losses: list, accuracies: list, mode: str) -> None:
     fig.suptitle(f"{mode}")
     plt.show()
 
-fit(model, x_train, y_train, criterion, LEARNING_RATE, NUM_EPOCHS, BATCH_SIZE)
-
-@typechecked
-class LogisticRegression(nn.Module):
-    """Logistic regression model.
-
-    The model consists of a single linear layer that maps from the number of features to the number of classes.
-    """
-
-    def __init__(self, num_features: int, num_classes: int) -> None:
-        """Constructor method for LogisticRegression.
-
-        Args:
-            num_features: the number of features
-            num_classes: the number of classes
-        """
-        super().__init__()
-        # define the linear layer
-        self.lin = nn.Linear(num_features, num_classes, bias=True)
-
-        # initialize the weights
-        self.init_weights()
-
-    def init_weights(self):
-        """Initialize the weights.
-
-        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
-        """
-        if isinstance(self.lin, (nn.Linear, nn.Conv2d)):
-            nn.init.xavier_uniform_(self.lin.weight)
-            if self.lin.bias is not None:
-                nn.init.zeros_(self.lin.bias)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-
-        Args:
-            x: the input tensor
-
-        Returns:
-            the logits
-        """
-        return self.lin(x)
-
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-fit(model, x_train, y_train, criterion, LEARNING_RATE, NUM_EPOCHS, BATCH_SIZE)
-
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-
-# define the optimizer
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
 @typechecked
 def fit(
     model: torch.nn.Module,
@@ -638,16 +596,6 @@ def fit(
 
     plot_curves(loss_history, acc_history, "Training")
 
-fit(model, x_train, y_train, criterion, optimizer, NUM_EPOCHS, BATCH_SIZE)
-
-from torch.utils.data import TensorDataset
-
-# create Tensor datasets
-train_dataset = TensorDataset(x_train, y_train)
-
-# check if the dataset is an instance of torch.utils.data.Dataset
-isinstance(train_dataset, torch.utils.data.Dataset)
-
 @typechecked
 def fit(
     model: torch.nn.Module,
@@ -702,140 +650,6 @@ def fit(
 
     plot_curves(loss_history, acc_history, "Training")
 
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
-fit(model, train_dataset, criterion, optimizer, NUM_EPOCHS, BATCH_SIZE)
-
-mnist_dev = torchvision.datasets.MNIST("./data", train=True, download=True)
-mnist_test = torchvision.datasets.MNIST("./data", train=False, download=True)
-
-print(len(mnist_dev))
-print(mnist_dev[0])
-
-mnist_dev = torchvision.datasets.MNIST(
-    "./data",
-    train=True,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-        ]
-    ),
-)
-
-mnist_test = torchvision.datasets.MNIST(
-    "./data",
-    train=False,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-        ]
-    ),
-)
-
-mnist_dev, mnist_test
-
-image, label = mnist_dev[0]
-image.shape, label
-
-@typechecked
-class FlattenTransform:
-    """Data transform that flattens the input tensor"""
-
-    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
-        """Flatten the input tensor.
-
-        Args:
-            image: the input tensor
-
-        Returns:
-            the flattened input tensor
-        """
-        return tensor.view(-1)
-
-@typechecked
-class IntToTensorTransform:
-    """Data transform that converts the input integer to a tensor"""
-
-    def __call__(self, value: int) -> torch.Tensor:
-        """Convert the input integer to a tensor.
-
-        Args:
-            value: the input integer
-
-        Returns:
-            the converted tensor
-        """
-        return torch.tensor(value, dtype=torch.int64)
-
-mnist_dev = torchvision.datasets.MNIST(
-    "./data",
-    train=True,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-            FlattenTransform(),
-        ]
-    ),
-    target_transform=IntToTensorTransform(),
-)
-
-mnist_test = torchvision.datasets.MNIST(
-    "./data",
-    train=False,
-    download=True,
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.1307,), (0.3081,)),
-            FlattenTransform(),
-        ]
-    ),
-    target_transform=IntToTensorTransform(),
-)
-
-mnist_dev, mnist_test
-
-image, label = mnist_dev[0]
-image.shape, label
-
-mnist_train, mnist_val = torch.utils.data.random_split(mnist_dev, [50000, 10000])
-mnist_train, mnist_val
-
-image, label = mnist_train[0]
-len(mnist_train), image.shape, label
-
-print(
-    f"Train | Num. of samples: {len(mnist_train)}, X shape: {mnist_train[0][0].shape}"
-)
-print(f"Val   | Num. of samples: {len(mnist_val)}, X shape: {mnist_val[0][0].shape}")
-print(f"Test  | Num. of samples: {len(mnist_test)}, X shape: {mnist_test[0][0].shape}")
-
-from torch.utils.data import DataLoader
-
-# create DataLoader
-train_dataloader = DataLoader(
-    dataset=mnist_test,
-    batch_size=BATCH_SIZE,
-    generator=torch.Generator().manual_seed(SEED),  # this ensures reproducibility
-)
-
-# check if the dataset is an instance of torch.utils.data.DataLoader
-isinstance(train_dataloader, torch.utils.data.DataLoader)
-
-# iterate over the DataLoader
-for x_batch, y_batch in train_dataloader:
-    print(x_batch.shape, y_batch.shape)
-    break
-
 @typechecked
 def fit(
     model: torch.nn.Module,
@@ -880,27 +694,6 @@ def fit(
         acc_history.append(epoch_acc)
 
     plot_curves(loss_history, acc_history, "Training")
-
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
-fit(model, train_dataloader, criterion, optimizer, NUM_EPOCHS)
-
-dataloaders = {}
-dataloaders["train"] = DataLoader(
-    mnist_train,
-    batch_size=BATCH_SIZE,
-    shuffle=False,
-    generator=torch.Generator().manual_seed(SEED),
-)
-dataloaders["val"] = DataLoader(
-    mnist_val,
-    batch_size=2 * BATCH_SIZE,
-    shuffle=False,
-    generator=torch.Generator().manual_seed(SEED),
-)
 
 @typechecked
 def fit(
@@ -1013,13 +806,6 @@ def plot_curves(
     ax2.legend()
     plt.show()
 
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
-fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS)
-
 @typechecked
 def run_epoch(
     model: torch.nn.Module,
@@ -1110,137 +896,6 @@ def fit(
     validation_history = {"loss": loss_history["val"], "acc": acc_history["val"]}
     plot_curves(training_history, validation_history)
 
-set_seed(SEED)
-model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
-fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS)
-
-test_dataloader = DataLoader(
-    dataset=mnist_test,
-    batch_size=2 * BATCH_SIZE,
-    shuffle=False,
-    generator=torch.Generator().manual_seed(SEED),
-)
-
-test_loss, test_acc = run_epoch(model, test_dataloader, criterion, train=False)
-print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
-
-@typechecked
-class CNN(nn.Module):
-    """Convolutional neural network model."""
-
-    def __init__(self, num_channels: int, num_classes: int) -> None:
-        """Constructor method for CNN.
-
-        Args:
-            num_channels: the number of channels
-            num_classes: the number of classes
-        """
-        super().__init__()
-        self.conv1 = nn.Conv2d(
-            in_channels=1,
-            out_channels=num_channels,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-        )
-        self.conv2 = nn.Conv2d(
-            in_channels=num_channels,
-            out_channels=num_channels,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-        )
-        self.conv3 = nn.Conv2d(
-            in_channels=num_channels,
-            out_channels=num_classes,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-        )
-
-        self.init_weights()
-
-    def init_weights(self) -> None:
-        """Initialize the parameters.
-
-        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
-        """
-        nn.init.xavier_normal_(self.conv1.weight)
-        nn.init.zeros_(self.conv1.bias)
-        nn.init.xavier_normal_(self.conv2.weight)
-        nn.init.zeros_(self.conv2.bias)
-        nn.init.xavier_normal_(self.conv3.weight)
-        nn.init.zeros_(self.conv3.bias)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-
-        Args:
-            x: the input tensor
-
-        Returns:
-            the logits
-        """
-        x = x.view(-1, 1, 28, 28)
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = F.avg_pool2d(x, 4)
-        return x.view(-1, x.size(1))
-
-NUM_CHANNELS = 16
-LEARNING_RATE = 0.1
-MOMENTUM = 0.9
-
-set_seed(SEED)
-model = CNN(num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-
-fit(model, dataloaders, criterion, optimizer, num_epochs=NUM_EPOCHS)
-
-run_epoch(model, test_dataloader, criterion, train=False)
-
-# check if GPU is available
-print(torch.cuda.is_available())
-
-# set the device to GPU if available
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-# check model device
-print(model.conv1.weight.device)
-model.to(device)
-print(model.conv1.weight.device)
-
-NUM_WORKERS = 0
-
-dataloaders = {}
-dataloaders["train"] = DataLoader(
-    mnist_train,
-    batch_size=BATCH_SIZE,
-    shuffle=True,
-    pin_memory=True,
-    num_workers=NUM_WORKERS,
-    generator=torch.Generator().manual_seed(SEED),
-)
-dataloaders["val"] = DataLoader(
-    mnist_val,
-    batch_size=2 * BATCH_SIZE,
-    pin_memory=True,
-    num_workers=NUM_WORKERS,
-    generator=torch.Generator().manual_seed(SEED),
-)
-dataloaders["test"] = DataLoader(
-    mnist_test,
-    batch_size=2 * BATCH_SIZE,
-    pin_memory=True,
-    num_workers=NUM_WORKERS,
-    generator=torch.Generator().manual_seed(SEED),
-)
-
 def instantiate_dataloaders(
     train_dataset: torch.utils.data.Dataset,
     val_dataset: torch.utils.data.Dataset,
@@ -1286,14 +941,6 @@ def instantiate_dataloaders(
         generator=torch.Generator().manual_seed(seed),
     )
     return dataloaders
-
-import multiprocessing
-
-num_cores = multiprocessing.cpu_count()
-print("Number of CPU cores:", num_cores)
-
-for x_batch, y_batch in dataloaders["train"]:
-    pass
 
 @typechecked
 def run_epoch(
@@ -1399,56 +1046,6 @@ def fit(
     validation_history = {"loss": loss_history["val"], "acc": acc_history["val"]}
     plot_curves(training_history, validation_history)
 
-set_seed(SEED)
-model = CNN(num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-dataloaders = instantiate_dataloaders(
-    mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
-)
-
-fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device)
-
-test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
-print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
-
-@typechecked
-class Lambda(nn.Module):
-    """A module that applies a given function."""
-
-    def __init__(self, func: Callable[[torch.Tensor], Any]) -> None:
-        """Constructor method for Lambda.
-
-        Args:
-            func: the function to apply
-        """
-        super().__init__()
-        self.func = func
-
-    def forward(self, x: torch.Tensor) -> Any:
-        """Forward pass.
-
-        Args:
-            x: the input tensor
-
-        Returns:
-            the output of the function
-        """
-        return self.func(x)
-
-set_seed(SEED)
-model = nn.Sequential(
-    Lambda(lambda x: x.view(-1, 1, 28, 28)),
-    nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1),
-    nn.ReLU(),
-    nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1),
-    nn.ReLU(),
-    nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1),
-    nn.ReLU(),
-    nn.AdaptiveAvgPool2d(1),
-    Lambda(lambda x: x.view(x.size(0), -1)),
-)
-
 @typechecked
 def initialize_weights(m: nn.Module) -> None:
     """Initialize the weights.
@@ -1463,177 +1060,486 @@ def initialize_weights(m: nn.Module) -> None:
         if m.bias is not None:
             nn.init.zeros_(m.bias)
 
+def main():
+    
+    a = sum(1, 2)
+    print(a)
 
-model.apply(initialize_weights)
+    try:
+        b = sum(1, 1.2)
+    except TypeError as e:
+        print(f"TypeError: {e}")
 
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-dataloaders = instantiate_dataloaders(
-    mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
-)
+    # download MNIST dataset
+    mnist_dev = torchvision.datasets.MNIST("./data", train=True, download=True)
+    mnist_test = torchvision.datasets.MNIST("./data", train=False, download=True)
+    mnist_dev, mnist_test
 
-fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device=device)
+    # check if the dataset is an instance of torch.utils.data.Dataset
+    isinstance(mnist_dev, torch.utils.data.Dataset)
 
-test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
-print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+    x_dev, y_dev = mnist_dev.data, mnist_dev.targets
 
-@typechecked
-class CNN(nn.Module):
-    """Convolutional neural network model."""
+    print(x_dev.shape, x_dev.dtype, x_dev.min(), x_dev.max())
+    print(y_dev.shape, y_dev.dtype, y_dev.min(), y_dev.max())
 
-    def __init__(self, num_layers: int, num_channels: int, num_classes: int) -> None:
-        """Constructor method for CNN.
+    # plot the first 10 images
+    fig, ax = plt.subplots(2, 5, figsize=(10, 4))
+    for i in range(10):
+        ax[i // 5, i % 5].imshow(x_dev[i], cmap="gray")
+        ax[i // 5, i % 5].set_title(f"Label: {y_dev[i]}")
+        ax[i // 5, i % 5].axis("off")
+    plt.tight_layout()
+    plt.show()
 
-        Args:
-            num_layers: the number of layers
-            num_channels: the number of channels
-            num_classes: the number of classes
-        """
-        super().__init__()
-        self.layers = nn.ModuleList()
-        for i in range(num_layers):
-            in_channels = 1 if i == 0 else num_channels
-            out_channels = num_channels if i < num_layers - 1 else num_classes
-            self.layers.append(
-                nn.Conv2d(
-                    in_channels=in_channels,
-                    out_channels=out_channels,
-                    kernel_size=3,
-                    stride=2,
-                    padding=1,
-                )
-            )
-            self.layers.append(nn.ReLU())
-        self.layers.append(nn.AdaptiveAvgPool2d(1))
+    x_dev = mnist_dev.data / 255.0
 
-        self.init_weights()
+    # split the dataset into train and validation
+    NUM_TRAIN = 50_000
 
-    def init_weights(self) -> None:
-        """Initialize the parameters.
+    x_train, y_train = x_dev[:NUM_TRAIN].flatten(1), y_dev[:NUM_TRAIN]
+    x_val, y_val = x_dev[NUM_TRAIN:].flatten(1), y_dev[NUM_TRAIN:]
 
-        The weight is initialized using Xavier uniform initialization and the bias is initialized to zero.
-        """
-        for layer in self.layers:
-            if isinstance(layer, nn.Conv2d):
-                nn.init.xavier_normal_(layer.weight)
-                nn.init.zeros_(layer.bias)
+    x_test = (mnist_test.data / 255.0).flatten(1)
+    y_test = mnist_test.targets
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
+    # check the shapes and data types
+    print(
+        f"Training data: {x_train.shape}, {y_train.shape}, {x_train.dtype}, {y_train.dtype}"
+    )
+    print(f"Validation data: {x_val.shape}, {y_val.shape}, {x_val.dtype}, {y_val.dtype}")
+    print(f"Test data: {x_test.shape}, {y_test.shape}, {x_test.dtype}, {y_test.dtype}")
 
-        Args:
-            x: the input tensor
+    # define number of features and classes
+    NUM_FEATURES = x_train.shape[1]
+    NUM_CLASSES = len(torch.unique(y_train))
 
-        Returns:
-            the logits
-        """
-        x = x.view(-1, 1, 28, 28)
-        for layer in self.layers:
-            x = layer(x)
-        x = x.view(x.size(0), -1)
-        return x
+    print(f"Num. of features: {NUM_FEATURES}")
+    print(f"Num. of classes: {NUM_CLASSES}")
 
-set_seed(SEED)
-NUM_LAYERS = 3
-model = CNN(num_layers=NUM_LAYERS, num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
-criterion = F.cross_entropy
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-dataloaders = instantiate_dataloaders(
-    mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
-)
 
-fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device=device)
 
-test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
-print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+    # Show how seed affects the random number generation
+    print(f"Seed: 42")
+    set_seed(42)
+    print(np.random.randint(0, 100, 6))
+    print(np.random.randint(0, 100, 6))
+    set_seed(42)
+    print(f"Seed: 42")
+    print(np.random.randint(0, 100, 3))
+    print(np.random.randint(0, 100, 3))
+    print(np.random.randint(0, 100, 3))
+    print(np.random.randint(0, 100, 3))
 
-type(model.state_dict()), len(
-    model.state_dict()
-), model.state_dict().keys(), model.state_dict()["layers.0.weight"].shape
+    SEED = 42
+    set_seed(SEED)
 
-@typechecked
-def fit(
-    model: torch.nn.Module,
-    dataloaders: Dict[str, torch.utils.data.DataLoader],
-    criterion: Callable,
-    optimizer: torch.optim.Optimizer,
-    num_epochs: int,
-    patience: int,
-    device: torch.device,
-) -> OrderedDict[str, torch.Tensor]:
-    """Train the model.
+    x = torch.tensor([1.0, 2.0, 3.0], requires_grad=False)
+    y = torch.tensor([4.0, 5.0, 6.0], requires_grad=False)
+    z = torch.tensor([7.0, 8.0, 9.0], requires_grad=True)
 
-    Args:
-        model: the model (an instance of torch.nn.Module)
-        dataloaders: the dictionary of dataloaders (an instance of torch.utils.data.DataLoader)
-        criterion: a callable that returns the loss given the logits and the labels
-        optimizer: the optimizer (an instance of torch.optim.Optimizer)
-        num_epochs: the number of epochs
-        patience: the patience for early stopping
-        device: the device (cpu or gpu)
+    a = x + y
+    b = x + z
 
-    Returns:
-        the state dict of the best model
-    """
-    loss_history = {"train": [], "val": []}
-    acc_history = {"train": [], "val": []}
+    print(f"a.requires_grad: {a.requires_grad}")
+    print(f"b.requires_grad: {b.requires_grad}")
 
-    best_val_acc = 0.0
-    curr_patience = patience
+    weight = torch.empty(NUM_FEATURES, NUM_CLASSES, requires_grad=False)
+    bias = torch.empty(NUM_CLASSES, requires_grad=False)
 
-    for epoch in range(num_epochs):
-        # Training
-        train_loss, train_acc = run_epoch(
-            model, dataloaders["train"], criterion, device, optimizer, train=True
-        )
+    weight, bias
 
-        # Validation
-        val_loss, val_acc = run_epoch(
-            model, dataloaders["val"], criterion, device, train=False
-        )
 
-        loss = {"train": train_loss, "val": val_loss}
-        acc = {"train": train_acc, "val": val_acc}
-        print_epoch_summary(epoch, num_epochs, loss, acc)
 
-        loss_history["train"].append(train_loss)
-        loss_history["val"].append(val_loss)
-        acc_history["train"].append(train_acc)
-        acc_history["val"].append(val_acc)
 
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            curr_patience = patience
-            # Save the best model state dict as a checkpoint
-            ckpt = copy.deepcopy(model.state_dict())
-            # Save the best model to disk
-            torch.save(ckpt, "ckpt.pt")
-        else:
-            curr_patience -= 1
-            if curr_patience == 0:
-                print("Early stopping")
-                break
 
-    training_history = {"loss": loss_history["train"], "acc": acc_history["train"]}
-    validation_history = {"loss": loss_history["val"], "acc": acc_history["val"]}
-    plot_curves(training_history, validation_history)
+    # initialize weight using Glorot initialization and bias to zero
+    weight = xavier_uniform_init(weight, requires_grad=True)
+    bias = zeros_init(bias, requires_grad=True)
 
-    return ckpt
+    weight, bias
 
-set_seed(SEED)
-PATIENCE = 3
-model = CNN(num_layers=3, num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-dataloaders = instantiate_dataloaders(
-    mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
-)
 
-best_model_state_dict = fit(
-    model, dataloaders, criterion, optimizer, NUM_EPOCHS, PATIENCE, device=device
-)
 
-# load the model from state dict
-model.load_state_dict(best_model_state_dict)
+    x, label = x_train[:64], y_train[:64]
+    logits = model(x, weight, bias)
+    print(logits.shape)
+    loss = nll_loss(logits, label)
 
-test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
-print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+
+
+    logits = model(x, weight, bias)
+    loss = nll_loss(logits, label)
+    params = {"weight": weight, "bias": bias}
+
+    dot = make_dot(loss, params=params, show_attrs=True, show_saved=True)
+    dot.render(
+        "computational_graph", directory="img", format="png"
+    )  # Save the graph as a PNG file
+
+    Image("img/computational_graph.png", width=600)
+
+    # define loss function
+    criterion = nll_loss
+
+    # define hyperparameters
+    LEARNING_RATE = 0.01
+    NUM_EPOCHS = 5
+    BATCH_SIZE = 64
+
+
+
+    fit(
+        model,
+        weight,
+        bias,
+        x_train,
+        y_train,
+        criterion,
+        LEARNING_RATE,
+        NUM_EPOCHS,
+        BATCH_SIZE,
+    )
+
+    criterion = nll_loss
+    pred = model(x_train[:BATCH_SIZE], weight, bias)
+    target = y_train[:BATCH_SIZE]
+    print(criterion(pred, target))
+
+    criterion = F.cross_entropy
+    pred = model(x_train[:BATCH_SIZE], weight, bias)
+    target = y_train[:BATCH_SIZE]
+    print(criterion(pred, target))
+
+
+
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+
+
+    fit(model, x_train, y_train, criterion, LEARNING_RATE, NUM_EPOCHS, BATCH_SIZE)
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+    fit(model, x_train, y_train, criterion, LEARNING_RATE, NUM_EPOCHS, BATCH_SIZE)
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+
+    # define the optimizer
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+
+
+    fit(model, x_train, y_train, criterion, optimizer, NUM_EPOCHS, BATCH_SIZE)
+
+
+
+    # create Tensor datasets
+    train_dataset = TensorDataset(x_train, y_train)
+
+    # check if the dataset is an instance of torch.utils.data.Dataset
+    isinstance(train_dataset, torch.utils.data.Dataset)
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+
+    fit(model, train_dataset, criterion, optimizer, NUM_EPOCHS, BATCH_SIZE)
+
+    mnist_dev = torchvision.datasets.MNIST("./data", train=True, download=True)
+    mnist_test = torchvision.datasets.MNIST("./data", train=False, download=True)
+
+    print(len(mnist_dev))
+    print(mnist_dev[0])
+
+    mnist_dev = torchvision.datasets.MNIST(
+        "./data",
+        train=True,
+        download=True,
+        transform=torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+            ]
+        ),
+    )
+
+    mnist_test = torchvision.datasets.MNIST(
+        "./data",
+        train=False,
+        download=True,
+        transform=torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+            ]
+        ),
+    )
+
+    mnist_dev, mnist_test
+
+    image, label = mnist_dev[0]
+    image.shape, label
+
+
+    mnist_dev = torchvision.datasets.MNIST(
+        "./data",
+        train=True,
+        download=True,
+        transform=torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+                FlattenTransform(),
+            ]
+        ),
+        target_transform=IntToTensorTransform(),
+    )
+
+    mnist_test = torchvision.datasets.MNIST(
+        "./data",
+        train=False,
+        download=True,
+        transform=torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize((0.1307,), (0.3081,)),
+                FlattenTransform(),
+            ]
+        ),
+        target_transform=IntToTensorTransform(),
+    )
+
+    mnist_dev, mnist_test
+
+    image, label = mnist_dev[0]
+    image.shape, label
+
+    mnist_train, mnist_val = torch.utils.data.random_split(mnist_dev, [50000, 10000])
+    mnist_train, mnist_val
+
+    image, label = mnist_train[0]
+    len(mnist_train), image.shape, label
+
+    print(
+        f"Train | Num. of samples: {len(mnist_train)}, X shape: {mnist_train[0][0].shape}"
+    )
+    print(f"Val   | Num. of samples: {len(mnist_val)}, X shape: {mnist_val[0][0].shape}")
+    print(f"Test  | Num. of samples: {len(mnist_test)}, X shape: {mnist_test[0][0].shape}")
+
+
+
+    # create DataLoader
+    train_dataloader = DataLoader(
+        dataset=mnist_test,
+        batch_size=BATCH_SIZE,
+        generator=torch.Generator().manual_seed(SEED),  # this ensures reproducibility
+    )
+
+    # check if the dataset is an instance of torch.utils.data.DataLoader
+    isinstance(train_dataloader, torch.utils.data.DataLoader)
+
+    # iterate over the DataLoader
+    for x_batch, y_batch in train_dataloader:
+        print(x_batch.shape, y_batch.shape)
+        break
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+
+    fit(model, train_dataloader, criterion, optimizer, NUM_EPOCHS)
+
+    dataloaders = {}
+    dataloaders["train"] = DataLoader(
+        mnist_train,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+    dataloaders["val"] = DataLoader(
+        mnist_val,
+        batch_size=2 * BATCH_SIZE,
+        shuffle=False,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+
+    fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS)
+
+
+    set_seed(SEED)
+    model = LogisticRegression(NUM_FEATURES, NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+
+    fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS)
+
+    test_dataloader = DataLoader(
+        dataset=mnist_test,
+        batch_size=2 * BATCH_SIZE,
+        shuffle=False,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+
+    test_loss, test_acc = run_epoch(model, test_dataloader, criterion, train=False)
+    print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+
+    NUM_CHANNELS = 16
+    LEARNING_RATE = 0.1
+    MOMENTUM = 0.9
+
+    set_seed(SEED)
+    model = CNN(num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+
+    fit(model, dataloaders, criterion, optimizer, num_epochs=NUM_EPOCHS)
+
+    run_epoch(model, test_dataloader, criterion, train=False)
+
+    # check if GPU is available
+    print(torch.cuda.is_available())
+
+    # set the device to GPU if available
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    # check model device
+    print(model.conv1.weight.device)
+    model.to(device)
+    print(model.conv1.weight.device)
+
+    NUM_WORKERS = 0
+
+    dataloaders = {}
+    dataloaders["train"] = DataLoader(
+        mnist_train,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        pin_memory=True,
+        num_workers=NUM_WORKERS,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+    dataloaders["val"] = DataLoader(
+        mnist_val,
+        batch_size=2 * BATCH_SIZE,
+        pin_memory=True,
+        num_workers=NUM_WORKERS,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+    dataloaders["test"] = DataLoader(
+        mnist_test,
+        batch_size=2 * BATCH_SIZE,
+        pin_memory=True,
+        num_workers=NUM_WORKERS,
+        generator=torch.Generator().manual_seed(SEED),
+    )
+
+
+
+
+    num_cores = multiprocessing.cpu_count()
+    print("Number of CPU cores:", num_cores)
+
+    for x_batch, y_batch in dataloaders["train"]:
+        pass
+
+
+    set_seed(SEED)
+    model = CNN(num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+    dataloaders = instantiate_dataloaders(
+        mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
+    )
+
+    fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device)
+
+    test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
+    print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+
+    set_seed(SEED)
+    model = nn.Sequential(
+        Lambda(lambda x: x.view(-1, 1, 28, 28)),
+        nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.Conv2d(16, 10, kernel_size=3, stride=2, padding=1),
+        nn.ReLU(),
+        nn.AdaptiveAvgPool2d(1),
+        Lambda(lambda x: x.view(x.size(0), -1)),
+    )
+
+
+
+    model.apply(initialize_weights)
+
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+    dataloaders = instantiate_dataloaders(
+        mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
+    )
+
+    fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device=device)
+
+    test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
+    print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+
+    set_seed(SEED)
+    NUM_LAYERS = 3
+    model = CNN(num_layers=NUM_LAYERS, num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
+    criterion = F.cross_entropy
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+    dataloaders = instantiate_dataloaders(
+        mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
+    )
+
+    fit(model, dataloaders, criterion, optimizer, NUM_EPOCHS, device=device)
+
+    test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
+    print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+    type(model.state_dict()), len(
+        model.state_dict()
+    ), model.state_dict().keys(), model.state_dict()["layers.0.weight"].shape
+
+
+    set_seed(SEED)
+    PATIENCE = 3
+    model = CNN(num_layers=3, num_channels=NUM_CHANNELS, num_classes=NUM_CLASSES)
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+    dataloaders = instantiate_dataloaders(
+        mnist_train, mnist_val, mnist_test, BATCH_SIZE, NUM_WORKERS, SEED
+    )
+
+    best_model_state_dict = fit(
+        model, dataloaders, criterion, optimizer, NUM_EPOCHS, PATIENCE, device=device
+    )
+
+    # load the model from state dict
+    model.load_state_dict(best_model_state_dict)
+
+    test_loss, test_acc = run_epoch(model, dataloaders["test"], criterion, train=False)
+    print(f"Test - loss: {test_loss:.4f}, acc: {test_acc:.4f}")
+
+if __name__ == "__main__":
+    main()
