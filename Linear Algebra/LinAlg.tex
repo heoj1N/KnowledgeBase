@@ -1,0 +1,44 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{document}
+
+\title{Linear Algebra}
+\author{Philipp W.}
+\date{\today}
+\maketitle
+\tableofcontents
+
+\clearpage
+
+\input{sections/introduction}
+\input{sections/vectors}
+\input{sections/matrices}
+\input{sections/tensors}
+\input{sections/operations}
+\input{sections/calculus}
+\input{sections/decompositions}
+\input{sections/eigenvalues}
+\input{sections/norms}
+\input{sections/numerical}
+\input{sections/special_matrices}
+\input{sections/complexity}
+\input{sections/practical}
+
+\end{document}

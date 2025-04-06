@@ -1,0 +1,46 @@
+\section{Norms and Inner Products}
+\subsection{Vector Norms}
+A \emph{norm} on a vector space $V$ is a function $\|\cdot\|: V \to \mathbb{R}$ satisfying:
+\begin{itemize}
+    \item $\|\mathbf{x}\| \ge 0$ and $\|\mathbf{x}\| = 0$ iff $\mathbf{x} = \mathbf{0}$
+    \item $\|\alpha \mathbf{x}\| = |\alpha| \|\mathbf{x}\|$ for scalar $\alpha$
+    \item $\|\mathbf{x} + \mathbf{y}\| \le \|\mathbf{x}\| + \|\mathbf{y}\|$ (triangle inequality)
+\end{itemize}
+
+Common vector norms:
+\begin{itemize}
+    \item $L_1$ norm: $\|\mathbf{x}\|_1 = \sum_{i=1}^n |x_i|$
+    \item $L_2$ norm: $\|\mathbf{x}\|_2 = \sqrt{\sum_{i=1}^n x_i^2}$
+    \item $L_\infty$ norm: $\|\mathbf{x}\|_\infty = \max_i |x_i|$
+    \item $L_p$ norm: $\|\mathbf{x}\|_p = \left(\sum_{i=1}^n |x_i|^p\right)^{1/p}$
+\end{itemize}
+
+\subsection{Matrix Norms}
+Matrix norms extend vector norms and include:
+\begin{itemize}
+    \item Frobenius norm: $\|A\|_F = \sqrt{\sum_{i,j} |a_{ij}|^2}$
+    \item Operator norm: $\|A\|_p = \sup_{\mathbf{x} \neq \mathbf{0}} \frac{\|A\mathbf{x}\|_p}{\|\mathbf{x}\|_p}$
+    \item Nuclear norm: $\|A\|_* = \sum_i \sigma_i$ (sum of singular values)
+\end{itemize}
+
+\subsection{Inner Products}
+An \emph{inner product} on $V$ is a function $\langle \cdot, \cdot \rangle: V \times V \to \mathbb{R}$ satisfying:
+\begin{itemize}
+    \item $\langle \mathbf{x}, \mathbf{x} \rangle \ge 0$ and $\langle \mathbf{x}, \mathbf{x} \rangle = 0$ iff $\mathbf{x} = \mathbf{0}$
+    \item $\langle \mathbf{x}, \mathbf{y} \rangle = \langle \mathbf{y}, \mathbf{x} \rangle$
+    \item $\langle \alpha \mathbf{x} + \beta \mathbf{y}, \mathbf{z} \rangle = \alpha \langle \mathbf{x}, \mathbf{z} \rangle + \beta \langle \mathbf{y}, \mathbf{z} \rangle$
+\end{itemize}
+
+\subsection{Orthogonality}
+\begin{itemize}
+    \item Vectors $\mathbf{x}$ and $\mathbf{y}$ are \emph{orthogonal} if $\langle \mathbf{x}, \mathbf{y} \rangle = 0$
+    \item A set of vectors is \emph{orthonormal} if they are pairwise orthogonal and have unit norm
+    \item The \emph{orthogonal complement} of a subspace $W$ is $W^\perp = \{\mathbf{x} \mid \langle \mathbf{x}, \mathbf{w} \rangle = 0 \text{ for all } \mathbf{w} \in W\}$
+\end{itemize}
+
+\subsection{Projections}
+The \emph{orthogonal projection} of $\mathbf{x}$ onto a subspace $W$ is:
+\[
+P_W \mathbf{x} = \sum_{i=1}^k \langle \mathbf{x}, \mathbf{w}_i \rangle \mathbf{w}_i,
+\]
+where $\{\mathbf{w}_1, \ldots, \mathbf{w}_k\}$ is an orthonormal basis for $W$. 

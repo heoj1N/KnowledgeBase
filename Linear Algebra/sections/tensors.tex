@@ -1,0 +1,21 @@
+\section{Tensors}
+\subsection{Definition and Notation}
+A \textbf{tensor} is a generalization of vectors (1-D) and matrices (2-D) to higher orders. 
+For example, a 3rd-order tensor $\mathcal{X}$ could be thought of as an $I \times J \times K$ array:
+\[
+\mathcal{X} \in \mathbb{R}^{I \times J \times K}.
+\]
+We write elements as $x_{i,j,k}$ for $1 \le i \le I$, $1 \le j \le J$, $1 \le k \le K$.
+
+\subsection{Mode-$n$ Multiplication}
+\emph{Mode-$n$ product} of a tensor $\mathcal{X} \in \mathbb{R}^{I_1 \times I_2 \times \cdots \times I_N}$ 
+with a matrix $A \in \mathbb{R}^{J \times I_n}$ is denoted $\mathcal{X} \times_n A$ and 
+results in a tensor of size 
+\[
+I_1 \times \cdots \times I_{n-1} \times J \times I_{n+1} \times \cdots \times I_N.
+\]
+Roughly, we multiply $A$ by each \emph{mode-$n$ fiber} of $\mathcal{X}$. 
+Tensor decomposition methods (CP, Tucker) are built upon repeated mode-$n$ multiplications.
+
+\subsection{Applications in ML}
+A tensor is a generalization of vectors and matrices for N-dimensional data and core operand in modern DL frameworks such as PyTorch.

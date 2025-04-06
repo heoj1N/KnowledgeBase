@@ -1,0 +1,45 @@
+\section{Eigenvalues and Eigenvectors}
+\subsection{Definition and Properties}
+For a square matrix $A \in \mathbb{R}^{n \times n}$, a nonzero vector $\mathbf{v}$ is an \emph{eigenvector} 
+if there exists a scalar $\lambda$ (the \emph{eigenvalue}) such that:
+\[
+A \mathbf{v} = \lambda \mathbf{v}.
+\]
+The set of all eigenvalues is called the \emph{spectrum} of $A$.
+
+\subsection{Characteristic Polynomial}
+The eigenvalues of $A$ are the roots of its \emph{characteristic polynomial}:
+\[
+p_A(\lambda) = \det(A - \lambda I_n).
+\]
+The algebraic multiplicity of an eigenvalue is its multiplicity as a root of $p_A(\lambda)$.
+
+\subsection{Diagonalization}
+A matrix $A$ is \emph{diagonalizable} if it can be written as:
+\[
+A = V \Lambda V^{-1},
+\]
+where $\Lambda$ is a diagonal matrix of eigenvalues and $V$ contains the corresponding eigenvectors.
+\begin{itemize}
+    \item A matrix is diagonalizable if it has $n$ linearly independent eigenvectors.
+    \item Symmetric matrices are always diagonalizable with real eigenvalues.
+\end{itemize}
+
+\subsection{Jordan Form}
+For matrices that are not diagonalizable, the \emph{Jordan form} provides a nearly diagonal representation:
+\[
+A = P J P^{-1},
+\]
+where $J$ is a block diagonal matrix with Jordan blocks on the diagonal.
+
+\subsection{Applications}
+\begin{itemize}
+    \item \textbf{Stability Analysis:} 
+          The eigenvalues determine the stability of linear systems $\dot{\mathbf{x}} = A \mathbf{x}$.
+    \item \textbf{Principal Component Analysis:} 
+          Eigenvalues of the covariance matrix indicate the variance in each principal direction.
+    \item \textbf{Graph Theory:} 
+          Eigenvalues of the adjacency matrix reveal properties of the graph.
+    \item \textbf{Quantum Mechanics:} 
+          Eigenvalues represent possible measurement outcomes.
+\end{itemize} 

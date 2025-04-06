@@ -1,0 +1,282 @@
+\section{Matrices}
+Let $A$ be an $m \times n$ matrix and $B$ be an $n \times p$ matrix. Then
+\[
+A =
+\begin{pmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{pmatrix},
+\]
+\[
+B =
+\begin{pmatrix}
+b_{11} & b_{12} & \cdots & b_{1p} \\
+b_{21} & b_{22} & \cdots & b_{2p} \\
+\vdots & \vdots & \ddots & \vdots \\
+b_{n1} & b_{n2} & \cdots & b_{np}
+\end{pmatrix}.
+\]
+
+\subsection{Matrix Addition and Scalar Multiplication}
+\[
+A + C \;=\;
+\begin{pmatrix}
+a_{11} + c_{11} & \cdots & a_{1n} + c_{1n} \\
+\vdots & \ddots & \vdots \\
+a_{m1} + c_{m1} & \cdots & a_{mn} + c_{mn}
+\end{pmatrix},
+\quad
+\alpha A \;=\;
+\begin{pmatrix}
+\alpha a_{11} & \cdots & \alpha a_{1n} \\
+\vdots & \ddots & \vdots \\
+\alpha a_{m1} & \cdots & \alpha a_{mn}
+\end{pmatrix}.
+\]
+\begin{itemize}
+\item $A$ and $C$ must be the same dimension for $A + C$ to be defined.
+\item Commutative: $A + C = C + A$.
+\end{itemize}
+
+\subsection{Matrix Multiplication}
+\[
+A B =
+\begin{pmatrix}
+\sum_{k=1}^n a_{1k} b_{k1} & \sum_{k=1}^n a_{1k} b_{k2} & \cdots & \sum_{k=1}^n a_{1k} b_{kp} \\
+\sum_{k=1}^n a_{2k} b_{k1} & \sum_{k=1}^n a_{2k} b_{k2} & \cdots & \sum_{k=1}^n a_{2k} b_{kp} \\
+\vdots                   & \vdots                   & \ddots & \vdots                   \\
+\sum_{k=1}^n a_{mk} b_{k1} & \sum_{k=1}^n a_{mk} b_{k2} & \cdots & \sum_{k=1}^n a_{mk} b_{kp}
+\end{pmatrix}.
+\]
+\begin{itemize}
+\item $AB$ is defined only if the number of columns of $A$ equals the number of rows of $B$.
+\item \emph{Not commutative in general}: $AB \neq BA$ (unless $A$ and $B$ have special forms or dimensions).
+\item \emph{Associative}: $(AB)C = A(BC)$.
+\end{itemize}
+
+\subsection{Matrix--Vector Multiplication}
+Let $A$ be an $m \times n$ matrix and $\mathbf{x}$ an $n \times 1$ column vector:
+\[
+A \mathbf{x} =
+\begin{pmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{pmatrix}
+\begin{pmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_n
+\end{pmatrix}
+=
+\begin{pmatrix}
+a_{11} x_1 + a_{12} x_2 + \cdots + a_{1n} x_n \\
+a_{21} x_1 + a_{22} x_2 + \cdots + a_{2n} x_n \\
+\vdots \\
+a_{m1} x_1 + a_{m2} x_2 + \cdots + a_{mn} x_n
+\end{pmatrix}.
+\]
+\begin{itemize}
+\item The result is an $m \times 1$ vector.
+\item $(A\mathbf{x})^\top = \mathbf{x}^\top A^\top$.
+\end{itemize}
+
+\subsection{Matrix Transpose}
+\[
+A^\top =
+\begin{pmatrix}
+a_{11} & a_{21} & \cdots & a_{m1} \\
+a_{12} & a_{22} & \cdots & a_{m2} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{1n} & a_{2n} & \cdots & a_{mn}
+\end{pmatrix}.
+\]
+\begin{itemize}
+\item $(A^\top)^\top = A$.
+\item $(AB)^\top = B^\top A^\top$ (reversing the order of multiplication when transposing a product).
+\end{itemize}
+
+\subsection{Matrix Inverse (Square Matrices)}
+If $A$ is an $n \times n$ invertible (non-singular) matrix, $A^{-1}$ is defined by:
+\[
+A A^{-1} = A^{-1} A = I_n,
+\]
+where $I_n$ is the $n \times n$ identity matrix.
+
+\begin{itemize}
+\item Not every square matrix is invertible (must have nonzero determinant).
+\item \emph{Inverse of a Product:} $(AB)^{-1} = B^{-1} A^{-1}$ (again, note how the order is reversed).
+\item $(A^{-1})^\top = (A^\top)^{-1}$ (transpose and inverse also reverse).
+
+\[
+\textbf{Inverse of a 2x2 matrix:}
+\quad
+A = \begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix},
+\quad
+A^{-1} = \frac{1}{ad - bc}
+\begin{pmatrix}
+d & -b \\
+-c & a
+\end{pmatrix}.
+\]
+
+\[
+\textbf{General formula via adjugate:}
+\quad
+A^{-1} = \frac{1}{\det(A)} \,\text{adj}(A),
+\]
+where \(\text{adj}(A)\) is the \emph{adjugate} (or classical adjoint) of \(A\), 
+obtained by taking the transpose of the cofactor matrix of \(A\).
+
+\subsection{Special Matrices and Common Properties}
+Below are several special classes of matrices frequently encountered in linear algebra and 
+applications such as optimization, statistics, and machine learning.
+
+\subsubsection{Identity Matrix}
+The \emph{identity matrix} $I_n$ is an $n \times n$ matrix with 1's on the main diagonal and 0's elsewhere:
+\[
+I_n = 
+\begin{pmatrix}
+1 & 0 & \cdots & 0 \\
+0 & 1 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 1
+\end{pmatrix}.
+\]
+\begin{itemize}
+    \item For any $n \times n$ matrix $A$, $A I_n = I_n A = A$.
+    \item The identity matrix is its own inverse: $I_n^{-1} = I_n$.
+\end{itemize}
+
+\subsubsection{All-Ones (Unit) Matrix}
+Sometimes referred to as the \emph{unit matrix of ones} (not to be confused with the identity matrix), 
+the $m \times n$ all-ones matrix is denoted by $J_{m \times n}$ or simply $J$ when dimensions are clear:
+\[
+J_{m \times n} = 
+\begin{pmatrix}
+1 & 1 & \cdots & 1 \\
+1 & 1 & \cdots & 1 \\
+\vdots & \vdots & \ddots & \vdots \\
+1 & 1 & \cdots & 1
+\end{pmatrix}_{m \times n}.
+\]
+\begin{itemize}
+    \item $J_{m \times n}$ has every entry equal to 1.
+    \item When $m = n$, $J_{n \times n}$ can be an eigenvector/eigenvalue example: 
+          one eigenvalue is $n$ (with eigenvector $\mathbf{1} = (1,1,\dots,1)^\top$), 
+          and the others are 0.
+\end{itemize}
+
+\subsubsection{Diagonal Matrix}
+A matrix $D \in \mathbb{R}^{n \times n}$ is called \emph{diagonal} if $d_{ij} = 0$ for all $i \neq j$:
+\[
+D = 
+\begin{pmatrix}
+d_{1} & 0 & \cdots & 0 \\
+0 & d_{2} & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & d_{n}
+\end{pmatrix}.
+\]
+\begin{itemize}
+    \item Diagonal matrices commute: $D_1 D_2 = D_2 D_1$ because multiplication is elementwise for the diagonal entries.
+    \item Inverses and powers of a diagonal matrix are easy to compute (assuming diagonal entries are nonzero).
+\end{itemize}
+
+\subsubsection{Symmetric and Hermitian Matrices}
+A matrix $A \in \mathbb{R}^{n \times n}$ is \emph{symmetric} if $A = A^\top$. 
+Over the complex field, $A$ is \emph{Hermitian} if $A = A^*$ (the conjugate transpose).
+\begin{itemize}
+    \item Symmetric real matrices have real eigenvalues and can be diagonalized by an orthogonal matrix (spectral theorem).
+    \item Covariance matrices in statistics are by definition symmetric (and positive semidefinite).
+\end{itemize}
+
+\subsubsection{Positive (Semi)Definite Matrices}
+A symmetric matrix $A \in \mathbb{R}^{n \times n}$ is:
+\begin{itemize}
+    \item \emph{Positive semidefinite (PSD)} if for all $\mathbf{x} \in \mathbb{R}^n$, 
+          $\mathbf{x}^\top A \mathbf{x} \ge 0$.
+    \item \emph{Positive definite (PD)} if for all $\mathbf{x} \neq \mathbf{0}$, 
+          $\mathbf{x}^\top A \mathbf{x} > 0$. 
+\end{itemize}
+Covariance matrices are PSD, and many optimization algorithms exploit PD/PSD structures (e.g.\ Hessians, kernel matrices).
+
+\subsubsection{Orthogonal (or Orthonormal) Matrices}
+An \emph{orthogonal matrix} $Q \in \mathbb{R}^{n \times n}$ satisfies $Q^\top Q = QQ^\top = I_n$. 
+In complex spaces, the analogous property is for \emph{unitary} matrices $U$ where $U^* U = I_n$. 
+\begin{itemize}
+    \item Orthogonal matrices preserve vector norms: $\|Q \mathbf{x}\|_2 = \|\mathbf{x}\|_2$.
+    \item The inverse of an orthogonal matrix is its transpose ($Q^{-1} = Q^\top$).
+\end{itemize}
+
+\subsubsection{Trace of a Matrix}
+The \emph{trace} of a square matrix $A \in \mathbb{R}^{n \times n}$ is the sum of its diagonal elements:
+\[
+\text{tr}(A) = \sum_{i=1}^n a_{ii}.
+\]
+\begin{itemize}
+    \item The trace is linear: $\text{tr}(A+B) = \text{tr}(A) + \text{tr}(B)$ and 
+          $\text{tr}(\alpha A) = \alpha \, \text{tr}(A)$ for scalar $\alpha$.
+    \item Cyclic property: $\text{tr}(ABC) = \text{tr}(CAB) = \text{tr}(BCA)$, 
+          which is often used to reorder matrix products inside traces.
+\end{itemize}
+
+\subsubsection{Jacobian Matrix}
+If $\mathbf{f}: \mathbb{R}^n \to \mathbb{R}^m$ is a vector-valued function 
+$\mathbf{f}(\mathbf{x}) = (f_1(\mathbf{x}),\ldots,f_m(\mathbf{x}))^\top$, 
+then the \emph{Jacobian matrix} $J(\mathbf{f})(\mathbf{x})$ is an $m \times n$ matrix whose 
+$(i,j)$th entry is $\partial f_i/\partial x_j$. Symbolically,
+\[
+J(\mathbf{f})(\mathbf{x}) 
+= \begin{pmatrix}
+\frac{\partial f_1}{\partial x_1} & \cdots & \frac{\partial f_1}{\partial x_n} \\
+\vdots & \ddots & \vdots \\
+\frac{\partial f_m}{\partial x_1} & \cdots & \frac{\partial f_m}{\partial x_n}
+\end{pmatrix}.
+\]
+
+\subsubsection{Hessian Matrix}
+If $f: \mathbb{R}^n \to \mathbb{R}$ is a scalar-valued function, the \emph{Hessian matrix} 
+$H_f(\mathbf{x})$ is the $n \times n$ matrix of second partial derivatives:
+\[
+H_f(\mathbf{x}) = 
+\begin{pmatrix}
+\frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1 \partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_1 \partial x_n} \\
+\frac{\partial^2 f}{\partial x_2 \partial x_1} & \frac{\partial^2 f}{\partial x_2^2} & \cdots & \frac{\partial^2 f}{\partial x_2 \partial x_n} \\
+\vdots & \vdots & \ddots & \vdots \\
+\frac{\partial^2 f}{\partial x_n \partial x_1} & \frac{\partial^2 f}{\partial x_n \partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_n^2}
+\end{pmatrix}.
+\]
+Under suitable smoothness conditions (Schwarz's theorem), mixed partials are equal, 
+so $H_f(\mathbf{x})$ is symmetric.
+
+\subsubsection{Covariance Matrix}
+A covariance matrix $C \in \mathbb{R}^{n \times n}$ is defined for a random vector 
+$\mathbf{X} \in \mathbb{R}^n$ by
+\[
+C = \mathbb{E}\bigl[(\mathbf{X} - \mathbb{E}[\mathbf{X}])(\mathbf{X} - \mathbb{E}[\mathbf{X}])^\top\bigr].
+\]
+\begin{itemize}
+    \item $C$ is always symmetric positive semidefinite.
+    \item If all eigenvalues of $C$ are strictly positive, $C$ is positive definite.
+    \item Frequently appears in statistics, Gaussian distributions, and kernel methods in ML.
+\end{itemize}
+
+\medskip
+
+\noindent
+All of these special matrices and their properties are cornerstones in modern linear algebra applications 
+--- especially in optimization (Jacobian, Hessian, orthogonal transformations), statistics (covariance, 
+positive semidefinite matrices), and signal processing (unitary/orthogonal operations). 
+Leveraging their structure often leads to more efficient algorithms and deeper insights 
+in theoretical analyses.
+
+
+\end{itemize}

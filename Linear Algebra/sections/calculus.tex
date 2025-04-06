@@ -1,0 +1,50 @@
+\section{Matrix Calculus and Gradients}
+Differentiating functions with respect to vectors and matrices is crucial in backpropagation, 
+gradient-based optimization, etc. Let’s outline some common rules:
+
+\subsection{Gradient w.r.t.\ a Vector}
+If $f(\mathbf{x})$ is a scalar function, and $\mathbf{x} \in \mathbb{R}^n$, 
+the gradient $\nabla_{\mathbf{x}} f(\mathbf{x})$ is a vector in $\mathbb{R}^n$:
+\[
+\nabla_{\mathbf{x}} f(\mathbf{x})
+= \begin{pmatrix}
+\frac{\partial f}{\partial x_1} \\
+\frac{\partial f}{\partial x_2} \\
+\vdots \\
+\frac{\partial f}{\partial x_n}
+\end{pmatrix}.
+\]
+\textbf{Chain rule example:} If $\mathbf{y} = A \mathbf{x}$, then $f(\mathbf{x}) = g(\mathbf{y})$, 
+we have $\nabla_{\mathbf{x}} f(\mathbf{x}) = A^\top \nabla_{\mathbf{y}} g(\mathbf{y}).$
+
+\subsection{Gradient w.r.t.\ a Matrix}
+If $F(A) \in \mathbb{R}$ for a matrix $A \in \mathbb{R}^{m \times n}$, 
+the gradient is also a matrix of the same shape, where
+\[
+(\nabla_A F)_{ij} = \frac{\partial F}{\partial a_{ij}}.
+\]
+A common identity is:
+\[
+\nabla_A \, \text{tr}(BA) = B^\top,
+\]
+where $\text{tr}(\cdot)$ is the trace operator. 
+
+\subsection{Backpropagation in Neural Networks}
+All of the partial derivatives needed in neural networks (weights, biases, etc.) 
+ultimately reduce to these matrix/vector calculus rules combined with the chain rule. 
+\[
+\frac{\partial \, \text{Loss}}{\partial W} 
+= \frac{\partial \, \text{Loss}}{\partial \, \text{Output}} 
+\cdot \frac{\partial \, \text{Output}}{\partial W}.
+\]
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,154 @@
+\section{Operation rules and properties}
+
+Our operands are vectors, matrices, or general tensors that are related to, can map or contain themselves values. Maps and relations defined on our operands can be different to usual multiplication and addition for scalar operands, which is a common source of error. In the following I provide an overview of noteworthy operation rules.
+
+\subsection{Transposition Reordering}
+\[
+(AB)^\top = B^\top A^\top.
+\]
+\[
+(\mathbf{u} \mathbf{v}^\top)^\top = \mathbf{v} \mathbf{u}^\top.
+\]
+\[
+(A^{-1})^\top = (A^\top)^{-1}.
+\]
+These \textbf{reverse} the order of multiplication.
+
+\subsection{Inverse Reordering}
+\[
+(AB)^{-1} = B^{-1} A^{-1}.
+\]
+When you invert a product of two (invertible) matrices, you \emph{reverse} the order of the factors 
+and invert each separately. The same holds in general for any product of multiple matrices:
+\[
+(A_1 A_2 \cdots A_k)^{-1} \;=\; A_k^{-1} \cdots A_2^{-1} A_1^{-1}.
+\]
+
+\subsection{Trace Manipulations}
+The trace operator has many convenient properties:
+\[
+\text{tr}(ABC) = \text{tr}(CAB) = \text{tr}(BCA),
+\]
+\[
+\text{tr}(A^\top) = \text{tr}(A),
+\]
+\[
+\text{tr}(\alpha A) = \alpha \, \text{tr}(A).
+\]
+Such properties help in simplifying expressions in ML proofs (e.g.\ expansions of 
+loss functions, gradient derivations).
+
+\subsection{Reshape and Vectorization}
+\textbf{vec}$(A)$ stacks the columns of $A$ into a single long column vector. 
+Useful identity:
+\[
+\text{vec}(ABC) = (C^\top \otimes A)\,\text{vec}(B).
+\]
+This is key in advanced backprop computations and in certain tensor expansions.
+
+
+\subsection{Associativity of Multiplication}
+\[
+(AB)C = A(BC),
+\]
+for conformable dimensions. This \emph{does not} mean $AB = BA$ in general; 
+it only means the way you group them does not matter.
+
+\subsection{Examples of Ordering}
+
+\begin{itemize}
+    \item \textbf{Transpose of a product:}\\
+    If $C = AB$, then $C^\top = (AB)^\top = B^\top A^\top$. 
+    For instance, if $A$ is $m \times n$ and $B$ is $n \times p$, 
+    then $B^\top$ is $p \times n$ and $A^\top$ is $n \times m$, 
+    so $B^\top A^\top$ is $p \times m$ (same as $C^\top$).
+
+    \item \textbf{Inverse of a product:}\\
+    If $C = AB$ is invertible, $(AB)^{-1} = B^{-1} A^{-1}$. 
+    For instance, if $A$ is $m \times m$ and $B$ is $m \times m$, 
+    and both are invertible, then $B^{-1}$ is $m \times m$, $A^{-1}$ is $m \times m$, 
+    so $B^{-1} A^{-1}$ is $m \times m$, as needed.
+
+    \item \textbf{Matrix-vector multiplication and reordering:}\\
+    If $\mathbf{x}$ is a vector, then 
+    \[
+    (A B) \mathbf{x} = A \bigl( B \mathbf{x} \bigr).
+    \]
+    We cannot change the order to $\mathbf{x} (A B)$ because that makes no sense dimensionally. 
+    Associativity only means we can parenthesize in different ways (but still maintain the left-to-right order of $A$, $B$, $\mathbf{x}$).
+\end{itemize}
+
+
+
+
+
+
+
+\subsection{Special Matrix Products}
+\subsection{Elementwise (Hadamard) Product}
+For two matrices $A$ and $B$ of identical dimensions $m \times n$, 
+the \textbf{Hadamard product} (elementwise multiplication) is:
+\[
+A \circ B \;=\;
+\begin{pmatrix}
+a_{11} b_{11} & a_{12} b_{12} & \cdots & a_{1n} b_{1n} \\
+a_{21} b_{21} & a_{22} b_{22} & \cdots & a_{2n} b_{2n} \\
+\vdots        & \vdots        & \ddots & \vdots        \\
+a_{m1} b_{m1} & a_{m2} b_{m2} & \cdots & a_{mn} b_{mn}
+\end{pmatrix}.
+\]
+\textbf{Usage in ML:}  
+Elementwise products appear in neural-network layers (especially in gating or attention mechanisms) 
+and factorized models (e.g.\ factorization machines).
+
+\subsection{Kronecker Product}
+For an $m \times n$ matrix $A$ and a $p \times q$ matrix $B$, 
+the \textbf{Kronecker product} $A \otimes B$ is a block matrix of dimension 
+$(m p) \times (n q)$:
+\[
+A \otimes B \;=\;
+\begin{pmatrix}
+a_{11} B & a_{12} B & \cdots & a_{1n} B \\
+a_{21} B & a_{22} B & \cdots & a_{2n} B \\
+\vdots   & \vdots   & \ddots & \vdots   \\
+a_{m1} B & a_{m2} B & \cdots & a_{mn} B
+\end{pmatrix}.
+\]
+\textbf{Usage in ML:}  
+Kronecker products are used in covariance structures (e.g.\ Kronecker-factored approximations 
+in second-order optimization or natural gradient), in multi-task learning, and in 
+tensor-based neural network architectures.
+
+\subsection{Khatri--Rao Product}
+For two matrices $A$ and $B$ each of size $m \times r$, 
+the \textbf{Khatri--Rao product} $A \odot B$ is defined as the columnwise Kronecker product:
+\[
+A \odot B \;=\;
+\bigl[
+a^{(1)} \otimes b^{(1)}, \;
+a^{(2)} \otimes b^{(2)}, \;
+\ldots,\;
+a^{(r)} \otimes b^{(r)}
+\bigr]
+\]
+where $a^{(k)}$ and $b^{(k)}$ are the $k$-th columns of $A$ and $B$, respectively.
+Hence $A \odot B$ is an $(m^2) \times r$ matrix. 
+
+\textbf{Usage in ML/Tensor Factorizations:}  
+Khatri--Rao products appear in PARAFAC/CANDECOMP decompositions of tensors and certain low-rank structures.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

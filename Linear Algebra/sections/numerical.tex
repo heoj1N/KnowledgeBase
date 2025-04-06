@@ -1,0 +1,64 @@
+\section{Numerical Linear Algebra}
+\subsection{Condition Numbers}
+The \emph{condition number} of a matrix $A$ measures how sensitive the solution of $A\mathbf{x} = \mathbf{b}$ 
+is to perturbations in $A$ or $\mathbf{b}$:
+\[
+\kappa(A) = \|A\| \|A^{-1}\|.
+\]
+\begin{itemize}
+    \item A large condition number indicates an ill-conditioned problem
+    \item For the 2-norm, $\kappa_2(A) = \sigma_{\max}/\sigma_{\min}$
+\end{itemize}
+
+\subsection{Stability of Algorithms}
+\begin{itemize}
+    \item \textbf{Backward Stability:} 
+          An algorithm is backward stable if the computed solution is the exact solution 
+          of a slightly perturbed problem
+    \item \textbf{Forward Stability:} 
+          The computed solution is close to the exact solution
+    \item \textbf{Mixed Stability:} 
+          Combines aspects of both backward and forward stability
+\end{itemize}
+
+\subsection{Floating-Point Arithmetic}
+\begin{itemize}
+    \item IEEE 754 standard defines floating-point representation
+    \item Machine epsilon $\epsilon$: smallest number such that $1 + \epsilon > 1$
+    \item Rounding errors accumulate in matrix operations
+    \item Catastrophic cancellation can occur in subtraction
+\end{itemize}
+
+\subsection{Iterative Methods}
+\subsubsection{Stationary Methods}
+\begin{itemize}
+    \item Jacobi iteration: $x_i^{(k+1)} = \frac{1}{a_{ii}} \left(b_i - \sum_{j \neq i} a_{ij} x_j^{(k)}\right)$
+    \item Gauss-Seidel: Uses updated values immediately
+    \item Successive Over-Relaxation (SOR): Weighted combination of Gauss-Seidel
+\end{itemize}
+
+\subsubsection{Krylov Subspace Methods}
+\begin{itemize}
+    \item Conjugate Gradient (CG): For symmetric positive definite systems
+    \item GMRES: For general nonsymmetric systems
+    \item BiCGSTAB: For nonsymmetric systems with better convergence
+\end{itemize}
+
+\subsection{Preconditioning}
+\begin{itemize}
+    \item Improves convergence of iterative methods
+    \item Common preconditioners:
+        \begin{itemize}
+            \item Incomplete LU factorization
+            \item Jacobi preconditioner
+            \item Multigrid methods
+        \end{itemize}
+\end{itemize}
+
+\subsection{Parallel Computing Considerations}
+\begin{itemize}
+    \item Data distribution strategies
+    \item Communication patterns
+    \item Load balancing
+    \item Cache optimization
+\end{itemize} 

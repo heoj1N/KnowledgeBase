@@ -1,0 +1,72 @@
+\section{Matrix Decompositions}
+\subsection{Eigen-Decomposition (Diagonalization)}
+For a square matrix $A \in \mathbb{R}^{n \times n}$ (assuming it has $n$ independent eigenvectors), 
+one can write:
+\[
+A \;=\; V \Lambda V^{-1},
+\]
+where $V$ is the matrix of eigenvectors and $\Lambda$ is a diagonal matrix of eigenvalues. 
+
+\textbf{Symmetric matrices ($A = A^\top$):} 
+If $A$ is real symmetric, then $A$ can be \emph{orthogonally diagonalized}:
+\[
+A = Q \Lambda Q^\top,
+\]
+where $Q$ is an orthogonal matrix ($Q^{-1} = Q^\top$). 
+This arises frequently in covariance/correlation matrices in ML (PCA).
+
+\subsection{Singular Value Decomposition (SVD)}
+Any $m \times n$ matrix $M$ can be decomposed as
+\[
+M \;=\; U \Sigma V^\top,
+\]
+where
+\begin{itemize}
+    \item $U \in \mathbb{R}^{m \times m}$ is orthogonal (or unitary in complex case),
+    \item $V \in \mathbb{R}^{n \times n}$ is orthogonal,
+    \item $\Sigma \in \mathbb{R}^{m \times n}$ is diagonal (in the sense that only the main diagonal may have nonzero values), 
+          containing singular values $\sigma_1 \ge \sigma_2 \ge \cdots \ge 0$.
+\end{itemize}
+\textbf{Usage in ML:}  
+Low-rank approximations (truncating SVD) are used in PCA, collaborative filtering, 
+and compression of large weight matrices in neural nets.
+
+\subsection{QR Decomposition}
+Any $m \times n$ matrix $M$ with full column rank ($n \le m$) can be factorized as
+\[
+M = Q R,
+\]
+where $Q$ is $m \times n$ with orthonormal columns, and $R$ is an $n \times n$ upper triangular matrix.
+
+\textbf{Usage in ML:} 
+QR decompositions often appear in least squares solutions, numerical optimization algorithms, 
+and methods for solving linear systems stably.
+
+\subsection{Cholesky Decomposition}
+A symmetric positive definite matrix $A$ can be decomposed uniquely as
+\[
+A = L L^\top,
+\]
+where $L$ is a lower-triangular matrix with positive diagonal entries.
+
+\textbf{Usage in ML:}  
+Covariance matrices are often approximated via Cholesky for fast sampling (e.g.\ in Gaussian processes) 
+or solving systems in Bayesian inference.
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{sections/practical}
+
+
+
+
+
+
+
+
+
